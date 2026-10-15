@@ -1,39 +1,43 @@
 # Legal Torrent Metadata Indexer (Hybrid Mobile/PC)
 
-Moteur de parsing et d'expansion de requêtes pour une application hybride (Mobile/PC) d'indexation de fichiers de métadonnées (.torrent).
+Application hybride **Mobile + PC** d'indexation de métadonnées `.torrent`  
+**strictement limitée** au contenu légal : open source, domaine public, Creative Commons autorisé, sources officielles.
 
-## Périmètre strictement autorisé
+## Fonctionnalités
 
-- Logiciels et OS sous licence libre (GPL, MIT, Apache, BSD, MPL…)
-- Contenus Creative Commons **uniquement** si la licence autorise explicitement le partage sous forme de torrent
-- Œuvres confirmées dans le domaine public (vérification œuvre + pays)
-- Torrents publiés par une source officielle (projet, éditeur, ayant droit, Internet Archive, distribution Linux officielle…)
-- Contenus éducatifs, scientifiques ou data ouverts sous licence permissive
+- Interface web responsive (téléphone, tablette, ordinateur)
+- PWA-ready (installable sur mobile)
+- Moteur de parsing conforme aux règles strictes du prompt
+- API JSON (`POST /parse`) pour intégration native Mobile/PC
+- Refus automatique de tout contenu adulte, propriétaire ou douteux
 
-## Exclusions absolues
+## Périmètre autorisé
 
-- Tout contenu adulte / NSFW / sexuellement ambigu
-- Films, séries, jeux, logiciels propriétaires ou musique récents protégés par le droit d’auteur
-- Toute requête dont la légalité n’est pas claire → **refus**
-- Aucune contournement de protection, aucun lien direct, aucune aide au téléchargement illégal
+| Autorisé | Refusé |
+|----------|--------|
+| Logiciels & OS libres (GPL, MIT, Apache, BSD…) | Contenu adulte / NSFW |
+| Domaine public confirmé | Films / séries / jeux récents protégés |
+| Creative Commons (partage torrent autorisé) | Logiciels propriétaires (Windows, Photoshop…) |
+| Sources officielles (Internet Archive, distros Linux…) | Toute légalité incertaine → refus |
 
 ## Architecture
 
 ```
 legal-torrent-indexer/
+├── web/                    # Frontend hybride (Mobile + PC)
+│   ├── index.html
+│   ├── css/styles.css
+│   ├── js/app.js
+│   └── manifest.json       # PWA
 ├── src/
-│   ├── parser.py          # Moteur de décision (cœur du prompt)
-│   ├── schema.py          # Validation JSON de sortie
-│   └── api.py             # Endpoint FastAPI
+│   ├── parser.py           # Moteur de décision
+│   ├── schema.py           # Validation JSON
+│   └── api.py              # FastAPI (API + static)
 ├── tests/
-│   └── test_parser.py
-├── examples/
-│   └── sample_queries.json
 ├── docs/
-│   └── DECISIONS.md
-├── requirements.txt
-├── main.py                # Point d’entrée CLI + serveur
-└── README.md
+├── examples/
+├── main.py
+└── requirements.txt
 ```
 
 ## Installation
@@ -45,38 +49,45 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Utilisation CLI
+## Lancement (Mobile + PC)
+
+```bash
+python main.py --server
+```
+
+Puis ouvrir dans le navigateur :
+
+- **PC** : http://localhost:8000
+- **Mobile** (même réseau) : http://<IP-de-votre-PC>:8000
+
+L'interface s'adapte automatiquement (responsive + safe-area iOS/Android).
+
+### CLI (sans interface)
 
 ```bash
 python main.py "ISO Ubuntu 24.04"
 python main.py "vieux film Night of the Living Dead de George Romero"
-python main.py "Dernier épisode de House of the Dragon"
+python main.py "films x"
 ```
 
-## API (FastAPI)
-
-```bash
-uvicorn src.api:app --reload --port 8000
-```
-
-Endpoint unique :
+### API pure
 
 ```
 POST /parse
 Content-Type: application/json
-{"query": "votre requête ici"}
+{"query": "votre requête"}
 ```
 
 Réponse = **exactement** le JSON défini dans le prompt (aucun texte autour).
 
-## Règles de décision (implémentées)
+## Règles de décision
 
-1. Si adulte/NSFW ou ambigu → `is_adult = true`
-2. Si contenu protégé non autorisé / propriétaire / récent / légalité incertaine → `is_legal_request = false`
-3. Si `is_adult == true` **OU** `is_legal_request == false` → tous les champs de `search_payload` = `null` et `keywords = []`
-4. Jamais d’invention de licence ou de source officielle
-5. En cas de doute → refus
+1. Adulte / NSFW / ambigu → `is_adult = true`
+2. Contenu protégé / propriétaire / récent / douteux → `is_legal_request = false`
+3. Si `is_adult` **ou** `!is_legal_request` → `search_payload = null` et `keywords = []`
+4. Jamais d'invention de licence ou de source officielle
+5. En cas de doute → **refus**
 
-## Licence du projet
+## Licence
 
-MIT – libre d’utilisation et de modification.
+MIT – libre d'utilisation et de modification.
