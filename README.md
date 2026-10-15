@@ -3,7 +3,7 @@
 Moteur de parsing **100 % local** pour indexation de métadonnées `.torrent`  
 strictement légales (open source, domaine public, Creative Commons autorisé).
 
-> **Remplace entièrement l’ancienne version Python.**  
+> **Remplace entièrement l’ancienne version Python** (supprimée du dépôt).  
 > Offline-first — aucun serveur, aucun backend Python.
 
 - **Flutter / Dart** — mobile + desktop (Windows, macOS, Linux)
@@ -13,16 +13,27 @@ strictement légales (open source, domaine public, Creative Commons autorisé).
 
 ## Installation
 
+Le package complet se trouve dans le dossier **`dart/`** :
+
 ```yaml
 # pubspec.yaml de votre app Flutter
 dependencies:
   legal_torrent_indexer:
     git:
       url: https://github.com/aesoltec/legal-torrent-indexer.git
+      path: dart
 ```
 
 ```bash
 dart pub get
+```
+
+En local :
+
+```bash
+cd dart && dart pub get
+dart test
+dart run example/main.dart "ISO Ubuntu 24.04"
 ```
 
 ## Utilisation (local, hors ligne)
@@ -35,19 +46,6 @@ print(result.toJson());
 // client_platform_hint == "local_flutter_payload"
 // confidence == "high"
 // jurisdiction == "unknown"
-```
-
-### CLI d’exemple
-
-```bash
-dart run example/main.dart "ISO Ubuntu 24.04"
-dart run example/main.dart "films x"
-```
-
-### Tests
-
-```bash
-dart test
 ```
 
 ## Format JSON produit
