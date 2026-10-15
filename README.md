@@ -1,93 +1,81 @@
-# Legal Torrent Metadata Indexer (Hybrid Mobile/PC)
+# Legal Torrent Indexer (Dart / Flutter)
 
-Application hybride **Mobile + PC** d'indexation de métadonnées `.torrent`  
-**strictement limitée** au contenu légal : open source, domaine public, Creative Commons autorisé, sources officielles.
+Moteur de parsing **100 % local** pour indexation de métadonnées `.torrent`  
+strictement légales (open source, domaine public, Creative Commons autorisé).
 
-## Fonctionnalités
+> **Remplace entièrement l’ancienne version Python.**  
+> Offline-first — aucun serveur, aucun backend Python.
 
-- Interface web responsive (téléphone, tablette, ordinateur)
-- PWA-ready (installable sur mobile)
-- Moteur de parsing conforme aux règles strictes du prompt
-- API JSON (`POST /parse`) pour intégration native Mobile/PC
-- Refus automatique de tout contenu adulte, propriétaire ou douteux
-
-## Périmètre autorisé
-
-| Autorisé | Refusé |
-|----------|--------|
-| Logiciels & OS libres (GPL, MIT, Apache, BSD…) | Contenu adulte / NSFW |
-| Domaine public confirmé | Films / séries / jeux récents protégés |
-| Creative Commons (partage torrent autorisé) | Logiciels propriétaires (Windows, Photoshop…) |
-| Sources officielles (Internet Archive, distros Linux…) | Toute légalité incertaine → refus |
-
-## Architecture
-
-```
-legal-torrent-indexer/
-├── web/                    # Frontend hybride (Mobile + PC)
-│   ├── index.html
-│   ├── css/styles.css
-│   ├── js/app.js
-│   └── manifest.json       # PWA
-├── src/
-│   ├── parser.py           # Moteur de décision
-│   ├── schema.py           # Validation JSON
-│   └── api.py              # FastAPI (API + static)
-├── tests/
-├── docs/
-├── examples/
-├── main.py
-└── requirements.txt
-```
+- **Flutter / Dart** — mobile + desktop (Windows, macOS, Linux)
+- `client_platform_hint` = `"local_flutter_payload"`
+- `confidence` ∈ `{high, medium, low}`
+- `jurisdiction` = `"unknown"` par défaut
 
 ## Installation
 
-```bash
-cd legal-torrent-indexer
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+```yaml
+# pubspec.yaml de votre app Flutter
+dependencies:
+  legal_torrent_indexer:
+    git:
+      url: https://github.com/aesoltec/legal-torrent-indexer.git
 ```
-
-## Lancement (Mobile + PC)
-
-```bash
-python main.py --server
-```
-
-Puis ouvrir dans le navigateur :
-
-- **PC** : http://localhost:8000
-- **Mobile** (même réseau) : http://<IP-de-votre-PC>:8000
-
-L'interface s'adapte automatiquement (responsive + safe-area iOS/Android).
-
-### CLI (sans interface)
 
 ```bash
-python main.py "ISO Ubuntu 24.04"
-python main.py "vieux film Night of the Living Dead de George Romero"
-python main.py "films x"
+dart pub get
 ```
 
-### API pure
+## Utilisation (local, hors ligne)
 
+```dart
+import 'package:legal_torrent_indexer/legal_torrent_indexer.dart';
+
+final result = parseQuery('ISO Ubuntu 24.04');
+print(result.toJson());
+// client_platform_hint == "local_flutter_payload"
+// confidence == "high"
+// jurisdiction == "unknown"
 ```
-POST /parse
-Content-Type: application/json
-{"query": "votre requête"}
+
+### CLI d’exemple
+
+```bash
+dart run example/main.dart "ISO Ubuntu 24.04"
+dart run example/main.dart "films x"
 ```
 
-Réponse = **exactement** le JSON défini dans le prompt (aucun texte autour).
+### Tests
 
-## Règles de décision
+```bash
+dart test
+```
 
-1. Adulte / NSFW / ambigu → `is_adult = true`
-2. Contenu protégé / propriétaire / récent / douteux → `is_legal_request = false`
-3. Si `is_adult` **ou** `!is_legal_request` → `search_payload = null` et `keywords = []`
-4. Jamais d'invention de licence ou de source officielle
+## Format JSON produit
+
+```json
+{
+  "original_query": "...",
+  "category": "movies | tv | software | other",
+  "is_adult": false,
+  "is_legal_request": true,
+  "search_payload": { ... },
+  "keywords": ["..."],
+  "target_extension": "torrent",
+  "client_platform_hint": "local_flutter_payload",
+  "reason": "...",
+  "confidence": "high | medium | low",
+  "jurisdiction": "unknown"
+}
+```
+
+## Règles strictes
+
+1. Adulte / NSFW → `is_adult = true`
+2. Contenu protégé / propriétaire / douteux → `is_legal_request = false`
+3. Si refus → `search_payload` nullifié + `keywords = []`
+4. Jamais d’invention de licence
 5. En cas de doute → **refus**
 
 ## Licence
 
-MIT – libre d'utilisation et de modification.
+MIT
