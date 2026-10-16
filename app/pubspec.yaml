@@ -1,6 +1,6 @@
 name: legal_torrent_indexer_app
-description: Interface Flutter (Mobile + PC) pour le parseur de métadonnées .torrent légales.
-version: 1.0.0
+description: Interface Flutter (Mobile + PC) + recherche Internet Archive légale.
+version: 1.1.0
 publish_to: "none"
 
 environment:
@@ -12,6 +12,7 @@ dependencies:
   legal_torrent_indexer:
     path: ../dart
   google_fonts: ^6.2.1
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
